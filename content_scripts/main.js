@@ -49,7 +49,7 @@ function shortCutStart(emoteListStatus, emoteAliasStatus){
         onReset.push(emoteCounter.reset);
         onReset.push(emote_picker.reset);
         onReset.push(emoteCounter.rollbackChannelWeight);
-        afterSendMethods.push(autoComplete.clearChat);
+        //afterSendMethods.push(autoComplete.clearChat);
     }
     
     var config = new tcf.config(

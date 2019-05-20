@@ -23,13 +23,13 @@ var tcfOnLoad = (function() {
     //onLoad
 
     function onLoad(){
-        newChat.chat_input.addEventListener('click',autoComplete.onClick);
+        tcf.chatTarget.chat_input.addEventListener('click',autoComplete.onClick);
         //newChat.chat_input.addEventListener('focusout',autoComplete.onFocusout);
-        newChat.chat_input.addEventListener('keydown', autoComplete.emotePickerChoiceEventListener);
-        newChat.chat_input.addEventListener('input', autoComplete.autoCompleteEventListener ); 
-        document.addEventListener('keydown',autoComplete.keyDownListener);
-        document.addEventListener('keyup',autoComplete.keyUpListener);
-        newChat.chat_input.addEventListener('input',autoComplete.emptyCheck);
+        tcf.chatTarget.chat_input.addEventListener('keydown', autoComplete.emotePickerChoiceEventListener);
+        tcf.chatTarget.chat_input.addEventListener('input', autoComplete.autoCompleteEventListener ); 
+        tcf.chatTarget.chat_input.addEventListener('keydown',autoComplete.keyDownListener);
+        tcf.chatTarget.chat_input.addEventListener('keyup',autoComplete.keyUpListener);
+        tcf.chatTarget.chat_input.addEventListener('input',autoComplete.emptyCheck);
     }
 
     return function(nc){

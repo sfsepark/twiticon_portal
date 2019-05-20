@@ -66,7 +66,7 @@ var autoComplete = (function(){
     
     function appendEmoteRecommendList(curEmotes, x)
     {
-        if(newChat.chat_input == null){
+        if(tcf.chatTarget.chat_input == null){
             return null;
         }
     
@@ -120,7 +120,7 @@ var autoComplete = (function(){
         emoteRecommendDiv.setAttribute('style','position : absolute; left : ' + width + 'px; top :' + (height -80) + 'px;');
 
         
-        newChat.chat_input_container.appendChild(emoteRecommendDiv);
+        tcf.chatTarget.chat_input.parentNode.appendChild(emoteRecommendDiv);
         
         return emoteRecommendDiv;
     }
@@ -128,28 +128,18 @@ var autoComplete = (function(){
     function replaceEmote(curEmote){
 
         var startindex, endindex ,text;
-        text = newChat.chat_input.innerText;
+        text = tcf.chatText;
         [startindex,endindex] = parseChatInput();
 
-        newChat.chat_input.innerHTML = '';
-        newChat.chat_input.innerText = text.substring(0,startindex);
-        var caret_span =document.createElement('span');
+        tcf.chatText = text.substring(0,startindex);
+        tcf.chatText += curEmote.regex + ' ';
 
-        newChat.chat_input.innerHTML += curEmote.regex + '&nbsp;';
+        cursor_pos = tcf.chatText.length;
 
-        caret_span.id = cc_id;
+        tcf.chatText += text.substring(endindex, text.length);
 
-        caret_span.innerText = text.substring(endindex, text.length);
-        newChat.chat_input.innerHTML += caret_span.innerHTML;
-        caret_span.innerHTML = '';
+        tcf.chatCursor = cursor_pos;
 
-        var el = newChat.chat_input;
-        var range = document.createRange();
-        var sel = window.getSelection();
-        range.setStart(el.childNodes[0], startindex + curEmote.regex.length + 1);
-        range.collapse(true);
-        sel.removeAllRanges();
-        sel.addRange(range);
     }
 
     
@@ -177,8 +167,8 @@ var autoComplete = (function(){
     }
 
     function parseChatInput(){
-        var cursor = window.getSelection().getRangeAt(0).endOffset;
-        var text = newChat.chat_input.innerText;
+        var cursor = tcf.chatCursor;
+        var text = tcf.chatText;
         var front = text.substring(0,cursor);
         var rear = text.substring(cursor,text.length);
 
@@ -217,27 +207,23 @@ var autoComplete = (function(){
 
     function autoCompleteEventListener(){
 
-        var sel = window.getSelection() ;
+        deleteEmoteRecomendList();
 
-        if(sel.focusNode.nodeName == '#text'
-                     && sel.focusNode.parentNode == newChat.chat_input){
-            deleteEmoteRecomendList();
+        var startindex, endindex ;
+        [startindex,endindex] = parseChatInput();
 
-            var startindex, endindex ;
-            [startindex,endindex] = parseChatInput();
+        var curAlias = tcf.chatText.substring(startindex, endindex);
 
-            var curAlias = newChat.chat_input.innerText.substring(startindex, endindex);
-    
-            var curEmotes = getAutoCompleteArray(curAlias.toLowerCase() ,5);
+        var curEmotes = getAutoCompleteArray(curAlias.toLowerCase() ,5);
 
-            var x, y ;
-            [x,y] = getPositionOfRecommendList(startindex);
-    
-            if(curEmotes != null)
-            {
-                appendEmoteRecommendList(curEmotes,x);
-            }
+        var x, y ;
+        [x,y] = getPositionOfRecommendList(startindex);
+
+        if(curEmotes != null)
+        {
+            appendEmoteRecommendList(curEmotes,x);
         }
+   
 
     }
 
@@ -265,6 +251,8 @@ var autoComplete = (function(){
     function keyIntervalStop(){
         stopStatus = true;
     }
+
+    mutax = 0;
     
     return {
         onClick : function(event){
@@ -274,68 +262,57 @@ var autoComplete = (function(){
         onFocusout : function(event){
             deleteEmoteRecomendList();
         },
-        emotePickerChoiceEventListener : function(event)
+        emotePickerChoiceEventListener : function(event) //here
         {
             var ele = document.activeElement;
         
-            if(shortcutKeyCodeSet[event.keyCode] != undefined && ele.className == 'new-chat-input'){
-                var index = shortcutKeyCodeSet[event.keyCode];
-        
-                if(emoteRecommendDiv != null){
-                    
-                    if(recommendEmoteList != null && recommendEmoteList.length > 0 && index < recommendEmoteList.length )
-                    {
-                        event.preventDefault();
 
-                        var curEmote = recommendEmoteList[index];
-                        replaceEmote(curEmote);
-                        var curEmotes = recommendEmoteList;
-                        deleteEmoteRecomendList();
+                if(shortcutKeyCodeSet[event.keyCode] != undefined){
+                    var index = shortcutKeyCodeSet[event.keyCode];
+            
+                    if(emoteRecommendDiv != null){
                         
-                        var startindex, endindex ;
-                        [startindex, endindex ] = parseChatInput();
-                        var x,y;
-                        [x,y] =getPositionOfRecommendList(startindex);
-                        //console.log(x + ' ' + y);
-                        appendEmoteRecommendList(curEmotes,x);
+                        if(recommendEmoteList != null && recommendEmoteList.length > 0 && index < recommendEmoteList.length )
+                        {
+                            event.preventDefault();
+    
+                            var curEmote = recommendEmoteList[index];
+                            var curEmotes = recommendEmoteList;
+                            replaceEmote(curEmote);
+                            
+                            deleteEmoteRecomendList();
+                            
+                            var startindex, endindex ;
+                            [startindex, endindex ] = parseChatInput();
+                            var x,y;
+                            [x,y] =getPositionOfRecommendList(startindex);
+                            //console.log(x + ' ' + y);
+                            appendEmoteRecommendList(curEmotes,x);
+                        }
                     }
                 }
-            }
-        },
-        showAutoComplete_MoseOverListener : function(event){
-            deleteEmoteRecomendList();
-        
-            var curEmotes = getAutoCompleteArray(event.path[0].innerText, 5);
-        
-            if(curEmotes != null)
-            {
-                deleteEmoteRecomendList();
-                appendEmoteRecommendList(curEmotes, event.path[0]);
-            }
-        },        
+                        
+        },   
         autoCompleteEventListener :autoCompleteEventListener,
-        setNewChat : function(nc){
-            newChat = nc;
-        },
         clearChat : function(){
             deleteEmoteRecomendList();
         },
         keyDownListener : function(event){
             var ele = document.activeElement;
         
-            if(33 <= event.keyCode && event.keyCode <= 40 && ele.className == 'new-chat-input'){
+            if(33 <= event.keyCode && event.keyCode <= 40){
                 keyIntervalStart();
             }
         },
         keyUpListener : function(event){
             var ele = document.activeElement;
 
-            if(33 <= event.keyCode && event.keyCode <= 40 && ele.className == 'new-chat-input'){
+            if(33 <= event.keyCode && event.keyCode <= 40){
                 keyIntervalStop();
             }
         },
         emptyCheck : function(event){
-            if(newChat.chat_input.innerText.match(/^\s*$/)){
+            if(tcf.chatText.match(/^\s*$/)){
                 deleteEmoteRecomendList();
             }
         }
