@@ -23,6 +23,21 @@ var emote_picker = (function(){
     var EmoteAvailableList = null;
     var EmoteIdDict = null;
 
+/*
+    chrome.runtime.onMessage.addListener(
+        function(request,sender,sendResponse){
+            if(request.type == 'emote_list'){
+                if(response != null && response.data != null && response.data.error === undefined)
+                    EmoteAvailableList = request.data;
+                else{
+                    EmoteAvailableList = null;
+                }
+            }
+        }
+    );
+    */
+
+
     //------------------- EVENT_HANDLE ----------------------
 
     var emote_picker = {
@@ -202,7 +217,7 @@ var emote_picker = (function(){
             if(EmoteIdDict[emote_id] != undefined){
                 (function(cur_emote_name){
                     emote_button.addEventListener('click',function(){
-                        tcf.addTextToChatInput(cur_emote_name + ' ');
+                        tcf.addTextToChatInput(cur_emote_name + '&nbsp;');
                     });
                 })(emote_name);
             }

@@ -1,6 +1,6 @@
 /*
     TWITCH CHAT FRAMEWORK.js
-    version : 1.1
+    version : 1.0
     developer : sfsepark@gmail.com
 */
 
@@ -547,21 +547,14 @@ define('twitchTheme',[],function(){
     }
 
     Theme.prototype.changeThemeUI = function(target){
-        try{
+        if(target.intergrityCheck() == true){
+            target.chat_setting_button.getElementsByClassName('chat_setting_img')[0].src =
+                this.setting_img_url;
+            target.viewer_check_button.getElementsByClassName('view_check_img')[0].src = 
+                this.viewer_check_img_url;
+            target.frame.setAttribute('class','new-chat ' + this.new_chat_css);
+    
             this.changePickerUI();
-            if(target.frame.classList.contains(dark_theme.new_chat_css)){
-                target.frame.classList.replace(dark_theme.new_chat_css,this.new_chat_css); 
-            }
-            else if(target.frame.classList.contains(light_theme.new_chat_css)){
-                target.frame.classList.replace(light_theme.new_chat_css,this.new_chat_css); 
-            }
-            else{
-                target.frame.classList.add(this.new_chat_css); 
-            }
-            
-        }
-        catch(e){
-
         }
     }    
 
@@ -649,7 +642,7 @@ define('twitchTheme',[],function(){
     }
 
 
-    //target : chatTarget
+    //target : newChat
     function colorCheckStart(target){
         var chatSectionList = document.getElementsByTagName('section');
 
@@ -661,17 +654,11 @@ define('twitchTheme',[],function(){
             {
                 if(data_a_target.match('dark') != null){
                     curTwitchTheme = dark_theme;
-                    
-                    curTwitchTheme.changeThemeUI(target);
-
                     themeCheckObserve(chatSectionList[i],target);
                     return curTwitchTheme;
                 }
                 else if(data_a_target.match('light') != null)  {
                     twitchColor = light_theme;
-                    
-                    curTwitchTheme.changeThemeUI(target);
-
                     themeCheckObserve(chatSectionList[i],target);
                     return curTwitchTheme;
                 }
@@ -728,31 +715,25 @@ define('picker',['twitchTheme'],function(twitchTheme){
 
     //----------------------------------------------------
 
-    var chatTarget = null;
+    var newChat = null;
 
     var disableCheckObserver = function(cur_picker){
         var target;
         var observer ;
         var disableCheckCallback = function(mutationsList, observer){
-
             for(var mutation of mutationsList){
-                if(mutation.type == 'childList' && mutation.target == target){
-                    for(var addedNode of mutation.addedNodes){
-                        if(addedNode.getAttribute('data-a-target') == 'bits-card'){
+                if(mutation.type == 'childList'){
+                    var picker_frame = target.getElementsByClassName('nc-picker-frame');
+
+                    if(picker_frame.length == 0){
+                        cur_picker.turnOff();
+                    }
+                    else{
+                        if(!(picker_frame[0].getAttribute('picker-type') == cur_picker.type))
+                        {
                             cur_picker.turnOff();
                         }
-                        else if(addedNode.getAttribute('data-a-target') == 'emote-picker'){
-                            cur_picker.turnOff();
-                        }
-                        else if(addedNode.classList.contains('nc-picker-frame')){
-                            cur_picker.turnOff();
-                        }
-                    }  
-                    for(var removedNode of mutation.removedNodes){
-                        if(removedNode.classList.contains('nc-picker-frame')){
-                            cur_picker.turnOff();
-                        }
-                    }              
+                    }
                 }
             }
         }
@@ -761,10 +742,10 @@ define('picker',['twitchTheme'],function(twitchTheme){
 
         return {
             observe : function(){
-                if(chatTarget == null){
-                    chatTarget = require('chatTarget');
+                if(newChat == null){
+                    newChat = require('newChat');
                 }
-                target = chatTarget.picker_container.parentElement;
+                target = newChat.picker_container;
 
                 observer.observe(target, { childList: true });
             },
@@ -803,116 +784,105 @@ define('picker',['twitchTheme'],function(twitchTheme){
 
     picker.prototype.turnOn = function(){
 
-        if(this.state == false){
-            //draw Frame
-            if(this.drawContentFrame != null)
-            {
-                this.contentFrame = this.drawContentFrame();
-            }
+        //draw Frame
+        if(this.drawContentFrame != null)
+        {
+            this.contentFrame = this.drawContentFrame();
+        }
 
-            if(this.drawControlFrame != null)
-            {
-                this.controlFrame = this.drawControlFrame();
-            }
+        if(this.drawControlFrame != null)
+        {
+            this.controlFrame = this.drawControlFrame();
+        }
+    
+        //append picker frame
 
-            //append picker frame
+        if(!(this.contentFrame == null && this.controlFrame == null) )
+        {
+            this.pickerFrame = originFrame.cloneNode(true);
 
-            if(!(this.contentFrame == null && this.controlFrame == null) )
-            {
-                this.pickerFrame = originFrame.cloneNode(true);
+            var pickerArea = this.pickerFrame.getElementsByClassName('nc-picker-content')[0];
+            this.pickerFrame.setAttribute('picker-type', this.type);
+            pickerArea.style['max-height'] = '271px';
 
-                var pickerArea = this.pickerFrame.getElementsByClassName('nc-picker-content')[0];
-                this.pickerFrame.setAttribute('picker-type', this.type);
-                pickerArea.style['max-height'] = '271px';
+            var cur_picker = this;
 
-                var cur_picker = this;
+            this.pickerSizeInterval = setInterval(
+                function (){  
+                    try{
+                        var pickerArea = cur_picker.pickerFrame.getElementsByClassName('nc-picker-content');
 
-                this.pickerSizeInterval = setInterval(
-                    function (){  
-                        try{
-                            var pickerArea = cur_picker.pickerFrame.getElementsByClassName('nc-picker-content');
+                        if(pickerArea.length == 0){
+                            cur_picker.turnOff();
+                        }else{
+                            pickerArea = pickerArea[0];
 
-                            if(pickerArea.length == 0){
-                                cur_picker.turnOff();
-                            }else{
-                                pickerArea = pickerArea[0];
-
-                                if(window.innerHeight < 498)
-                                {
-                                    pickerArea.style['max-height'] = window.innerHeight-(498-271) + 'px';
-                                }
-                                else{
-                                    pickerArea.style['max-height'] = '271px';
-                                }
+                            if(window.innerHeight < 498)
+                            {
+                                pickerArea.style['max-height'] = window.innerHeight-(498-271) + 'px';
+                            }
+                            else{
+                                pickerArea.style['max-height'] = '271px';
                             }
                         }
-                        catch(e){
-                            cur_picker.turnOff();
-                        }
-                        
                     }
-                    ,
-                    100
-                );
-
-                if(this.contentFrame != null)
-                {
-                    var scrollable_area = this.pickerFrame.getElementsByClassName('nc-picker-content scrollable-area')[0];
-                    var scroll_content = this.pickerFrame.getElementsByClassName('simplebar-scroll-content')[0];
-                    var scroll_frame = this.pickerFrame.getElementsByClassName('nc-pd-1')[0];
-
-                    scroll_frame.appendChild(this.contentFrame);
+                    catch(e){
+                        cur_picker.turnOff();
+                    }
+                    
                 }
+                ,
+                100
+            );
 
-                if(this.controlFrame != null){
-                    var controlFrameWrapper = document.createElement('div');
-                    controlFrameWrapper.classList.add('nc-picker-control')
-                    var emote_picker_frame = this.pickerFrame.getElementsByClassName('nc-picker')[0];
-                    emote_picker_frame.appendChild(controlFrameWrapper);
-                    controlFrameWrapper.appendChild(this.controlFrame);
-                }
+            if(this.contentFrame != null)
+            {
+                var scrollable_area = this.pickerFrame.getElementsByClassName('nc-picker-content scrollable-area')[0];
+                var scroll_content = this.pickerFrame.getElementsByClassName('simplebar-scroll-content')[0];
+                var scroll_frame = this.pickerFrame.getElementsByClassName('nc-pd-1')[0];
 
-                if(chatTarget == null)
-                {
-                    chatTarget  = require('chatTarget');
-                }
-                chatTarget.picker_container.parentElement.appendChild(this.pickerFrame);
-
-                if(this.onLoad != null && this.onLoad != undefined && typeof(this.onLoad) === 'function')
-                    this.onLoad();
-
+                scroll_frame.appendChild(this.contentFrame);
             }
 
-            this.disableCheckObserver.observe();
+            if(this.controlFrame != null){
+                var controlFrameWrapper = document.createElement('div');
+                controlFrameWrapper.classList.add('nc-picker-control')
+                var emote_picker_frame = this.pickerFrame.getElementsByClassName('nc-picker')[0];
+                emote_picker_frame.appendChild(controlFrameWrapper);
+                controlFrameWrapper.appendChild(this.controlFrame);
+            }
 
-            this.state = true;
+            if(newChat == null)
+            {
+                newChat = require('newChat');
+            }
+            newChat.picker_container.appendChild(this.pickerFrame);
+
+            if(this.onLoad != null && this.onLoad != undefined && typeof(this.onLoad) === 'function')
+                this.onLoad();
+
         }
-        
+
+        this.disableCheckObserver.observe();
+
+        this.state = true;
     }
 
     picker.prototype.turnOff = function(){
 
-        if(this.state == true)
-        {
-            try{
-                chatTarget.picker_container.parentElement.removeChild(this.pickerFrame);
-            }
-            catch(e){            };
-            clearInterval(this.pickerSizeInterval);
-            this.pickerSizeInterval = null;
-    
-            this.disableCheckObserver.disconnect();
-    
-            if(this.onDestroy !== null && this.onDestroy !== undefined && typeof(this.onDestroy) === 'function')
-                this.onDestroy();
-    
-            this.pickerFrame = null;
-            this.contentFrame = null;
-            this.controlFrame = null;
-    
-            this.state = false;
-        }
+        clearInterval(this.pickerSizeInterval);
+        this.pickerSizeInterval = null;
 
+        this.disableCheckObserver.disconnect();
+
+        if(this.onDestroy !== null && this.onDestroy !== undefined && typeof(this.onDestroy) === 'function')
+            this.onDestroy();
+
+        this.pickerFrame = null;
+        this.contentFrame = null;
+        this.controlFrame = null;
+
+        this.state = false;
     }
 
     picker.prototype.setPickerImg = function(light, dark){
@@ -926,86 +896,18 @@ define('picker',['twitchTheme'],function(twitchTheme){
     picker.prototype.getPickerButton = function(){
 
         function switchPicker(picker){
-
-            //origin emote picker close
-
-            function turnOffOriginEmotePicker(){
-                try{
-
-                    if( chatTarget.frame.getElementsByClassName('emote-picker').length > 0){
-                        var cur_emote_button = chatTarget.searchingTWDiv('tw-interactive','emote-picker-button',chatTarget.frame);
-                        if(cur_emote_button != null){
-                            cur_emote_button.click();
-                        }
-                    }
-                }
-                catch(e){}
-            }
-
-            //bit card close
-
-            function searchBitsCard(){
-
-                var bitCardFrame = null;
-
-                if(chatTarget == null)
-                {
-                    chatTarget  = require('chatTarget');
-                }
-                
-                bitCardFrame = chatTarget.searchingTWDiv(
-                    'bits-card-wrapper' , 
-                    'bits-card',
-                    chatTarget.picker_container.parentElement);
-
-                return bitCardFrame;
-            }
-    
-            function getBitsCardClose(bitsCard){
-
-                var closeButton = null;
-
-                if(chatTarget == null)
-                {
-                    chatTarget  = require('chatTarget');
-                }
-                closeButton = chatTarget.searchingTWDiv('tw-button-icon--small','bits-card-close-button',bitsCard);
-
-                return closeButton;
-            }
-
-
-            //routine for turnoff origin picker
-
             var pre_picker = document.getElementsByClassName('nc-picker-frame');
 
-            if(chatTarget == null){
-                chatTarget = require('chatTarget');
+            if(newChat == null){
+                newChat = require('newChat');
             }
-
-            var bitCardFrame = searchBitsCard();
-
-            if(bitCardFrame != null){
-                var closeButton = getBitsCardClose();
-
-                if(closeButton == null){
-                    return;
-                }
-                else{
-                    closeButton.click();
-                }
-            }
-
-            turnOffOriginEmotePicker();
-
-            //routine for turn on picker
 
             if(pre_picker.length > 0){
                 if(pre_picker[0].getAttribute('picker-type') == picker.type){
-                    chatTarget.picker_container.parentElement.removeChild(pre_picker[0]);
+                    newChat.picker_container.removeChild(pre_picker[0]);
                 }
                 else{
-                    chatTarget.picker_container.parentElement.removeChild(pre_picker[0]);
+                    newChat.picker_container.removeChild(pre_picker[0]);
                     picker.turnOn();
                 }
             }
@@ -1043,7 +945,230 @@ define('picker',['twitchTheme'],function(twitchTheme){
     return picker;
 })
 ;
-define('chatTarget',[],function(){
+define('chatUsingTmi',['chatTarget'],function(chatTarget) {
+    var msg_KR_dict = {
+        msg_banned : "이 방에서 영구히 정지당하였습니다."
+    }
+
+    var join_cache = (function(){
+
+        var cache = [];
+
+        return {
+            join : function(channel){
+                return new Promise(function(resolve, reject){
+
+                    if(cache.includes(channel)){
+                        var index = cache.indexOf(channel);
+                        if (index !== -1) cache.splice(index, 1);
+                    }
+
+                    if(!chatClient.getChannels().includes('#' + channel))
+                    {
+                        chatClient.join(channel).then(function(data){
+                            cache.push(channel);
+                            resolve(channel);
+                        }).catch(function(data){
+                            reject(data);
+                        })                          
+                    }
+                    else{
+                        cache.push(channel);
+                        resolve(channel);
+                    }
+
+                    if(cache.length > 5){
+                        var victim = cache.shift();
+                        chatClient.part(victim);
+                    }
+                       
+                });
+            }
+        };
+    })();
+
+    var user_info;
+    var connectPromise = null;
+    var chatClient = null;
+
+    var nc_before = 'nc-before';
+    var nc_status = 'nc-status';
+
+    var curLogDiv = null;
+
+    var addChatLog = function(logDiv, message){
+        var ncStatus = document.createElement('div');
+        ncStatus.classList.add('chat-line__status');
+        ncStatus.classList.add(nc_status);
+        ncStatus.innerText = message;
+
+        var logs = logDiv.children;
+
+        if(logs.length > 0){
+            curLogDiv = logDiv;
+
+            logDiv.appendChild(ncStatus);
+
+            chatLogObserver.disconnect();
+            chatLogObserver.observe(logDiv,{childList : true});
+        }
+    }
+
+    var chatLogObserver = new MutationObserver(function(mutations){
+        mutations.forEach(function(mutation){
+            if(mutation.type == "childList"){
+                while(curLogDiv.firstChild.classList.contains(nc_status)){
+                    curLogDiv.removeChild(curLogDiv.firstChild)   ; 
+                }
+            }   
+        });
+    })
+
+    var connectPromise = new Promise(function(resolve, reject){
+
+        function connect(user_info){
+            var authToken = user_info.authToken;
+            var userName = user_info.login;
+    
+            var chatClientOptions = {
+                options: {
+                    debug: false
+                },
+                connection: {
+                    reconnect: true,
+                    secure : true
+                },
+                identity: {
+                    username: userName,
+                    password: "oauth:" + authToken
+                }
+            }
+    
+            chatClient = new tmi.client(chatClientOptions);            
+            connectPromise = chatClient.connect();
+            resolve(true);
+
+            connectPromise.then(function(result){
+                chatClient.on("notice", function(channel, msgid, message){
+                    if(chatTarget.frame != null){
+                        console.log('notice : ',channel,msgid, message);
+                        var parentFrame = chatTarget.frame.parentElement;
+                        var chatLine = parentFrame.getElementsByClassName('chat-list__lines')[0];
+                        var logLine = chatLine.getElementsByClassName('tw-flex-grow-1 tw-full-height tw-pd-b-1')[0];
+
+                        if(logLine.getAttribute('role') == 'log'){
+                            addChatLog(logLine,message);                            
+                        }
+                    }
+                });
+            });
+            
+        }
+
+        chrome.runtime.sendMessage({type:'user_info'}, function(response)
+        {      
+            if(chatClient != null){
+                chatClient.disconnect();
+            }
+
+            if(response != null)
+            { 
+                if(response.authToken != null){
+                    connect(response);
+                }
+                else{
+                    chatClient = null;
+                    resolve(true); // 유저가 로그인 되어있지 않더라도 chatMethod는 작동해야한다.(단, 채팅은 보내지면 안 됨)
+                }
+            }
+            else{
+                chatClient = null;
+                resolve(false);
+            }
+        });
+    
+    });
+
+
+    /*
+
+    chrome.runtime.onMessage.addListener(
+        function(request){
+            if(request != null && request.type == 'user_info'){
+                if(chatClient != null){
+                    chatClient.disconnect();
+                }
+                user_info = request.data;
+                if(request.data != null){
+                    connect(request.data);
+                }
+                else{
+                    chatClient = null;
+                }
+            }
+        }
+    );
+*/
+
+    var chatClient = null;
+    var chatClientConnected = false;
+    var chatClientChannel = '';
+
+    return {
+        sendChat :
+            function(message)
+            {
+                if(chatClientConnected && chatClientChannel != '')
+                {
+                    chatClient.say(chatClientChannel, message);
+                }
+                else{
+                    if(user_info == null)
+                    {
+                        if(chatTarget.send_button != undefined && chatTarget.send_button != null){
+                            try{
+                                chatTarget.send_button.click();       
+                            }
+                            catch(e){};
+                        }
+                    }
+                }
+            },
+
+        readyChat :
+            function(channel)
+            {
+                if(chatClient != null)
+                {
+                    connectPromise.then(function(){
+                        join_cache.join(channel).then(function(channel){
+                            chatClientChannel = channel;
+                            chatClientConnected = true;
+                        }).catch(function(err){
+                            console.log(err);
+                        })
+                    });
+                }
+            },
+        
+        //트위치 이모티콘을 이용한 chatMethod에서만 pause/restart 기능이 필요하다.
+        pauseReadyChat : function(){ },
+        restartReadyChat :  function()  { },
+    
+        cleanUpReadyChat :
+            function()
+            {
+                chatClientConnected = false;
+                chatClientChannel = '';
+            },
+        connectPromise : connectPromise
+            
+    }
+});
+
+define("chat_using_tmi", function(){});
+
+define('chatTarget',['chat_using_tmi'],function(chatMethod){
     function searchingTWDiv(className , data_a_target , frame)
     {
         var target = null;
@@ -1070,8 +1195,6 @@ define('chatTarget',[],function(){
         this.chat_view_list_button = null;
         this.chat_setting_balloon = null;
         this.chat_input = null;
-
-        this.picker_container = null;
     }
 
     /*
@@ -1106,25 +1229,18 @@ define('chatTarget',[],function(){
             this.chat_setting_button = cur_chat_setting_button;
             this.chat_view_list_button = cur_chat_view_list_button;
             this.chat_input = cur_chat_input;
-            
-            this.picker_container = this.emote_picker.parentElement;
-
+    
+            var cur_style = this.frame.getAttribute('style');
+            if(cur_style == null)  {
+                this.frame.setAttribute('style','display:none !important;');
+            }
+            else{
+                this.frame.setAttribute('style', cur_style + ';display:none !important;');
+            }
             return true;
         }
     }
 
-    function hideEmotePicker(){
-
-        if(this.emote_picker != null){
-            var cur_style = this.emote_picker.getAttribute('style');
-            if(cur_style == null)  {
-                this.emote_picker.setAttribute('style','display:none !important;');
-            }
-            else{
-                this.emote_picker.setAttribute('style', cur_style + ';display:none !important;');
-            }
-        }
-    } 
 
     return {
         parent_frame : null,
@@ -1135,12 +1251,10 @@ define('chatTarget',[],function(){
         chat_setting_button : null,
         chat_input : null,
         chat_setting_balloon : null, // lazySearching
-        picker_container : null,
 
         clear : clear,
         register : register,
-        searchingTWDiv : searchingTWDiv,
-        hideEmotePicker : hideEmotePicker
+        searchingTWDiv : searchingTWDiv
     }
 
 });
@@ -1149,20 +1263,375 @@ define('chatTarget',[],function(){
 
 define("chat_target", function(){});
 
+define('newChat',["twitchTheme",
+"chatTarget",'chatUsingTmi'],
+    function(twitchTheme,chatTarget,chatMethod){
+
+    //init newChat object
+
+    var newChat = {
+        frame : null,
+        chat_input : null,
+        send_button : null,
+        chat_input_buttons_container : null,
+        chat_input_container : null,
+        viewer_check_button : null,
+        chat_setting_button : null,
+        picker_buttons_container : null,
+        picker_container : null
+    }
+
+    var attributeKeys = Object.keys(newChat);
+
+    newChat.attribute = {};
+
+
+    var xmlHttp = null;
+
+    xmlHttp = new XMLHttpRequest();
+    xmlHttp.open( "GET", chrome.extension.getURL ("html/chat_frame.html"), false );
+    xmlHttp.send(null);
+    
+    var chatFrameHTML = xmlHttp.responseText;
+    var originFrame =(function(htmlString) {
+        var div = document.createElement('div');
+        div.innerHTML = htmlString.trim();
+        return div.firstChild; 
+      })(chatFrameHTML); 
+
+    //private methods of newChat object
+
+    function findFrame(){
+
+        newChat.frame = document.getElementsByClassName('new-chat')[0];
+
+        if(newChat.frame !== null && newChat.frame !== undefined){
+            newChat.chat_input_container = newChat.frame.getElementsByClassName('new-chat-input-container')[0];
+            newChat.chat_input  = newChat.frame.getElementsByClassName('new-chat-input')[0];   
+            newChat.picker_buttons_container = newChat.frame.getElementsByClassName('new-chat-picker-buttons')[0];
+            newChat.chat_input_buttons_container = newChat.frame.getElementsByClassName('new-chat-input-buttons-container')[0];
+            newChat.chat_setting_button = newChat.frame.getElementsByClassName('nc-CS-button')[0];
+            newChat.viewer_check_button = newChat.frame.getElementsByClassName('nc-VC-button')[0];
+            newChat.send_button = newChat.frame.getElementsByClassName('new-chat-send-button')[0];
+            newChat.picker_container = newChat.frame.getElementsByClassName('nc-picker-container')[0];
+
+            for(var attribute of attributeKeys){
+
+                if(newChat[attribute]  === null || newChat[attribute] === undefined){
+                    newChat.clear();
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
+
+    function cloneChatFrame(){
+        newChat.frame = originFrame.cloneNode(true);
+
+        newChat.chat_input_container = newChat.frame.getElementsByClassName('new-chat-input-container')[0];
+        newChat.chat_input  = newChat.frame.getElementsByClassName('new-chat-input')[0];   
+        newChat.picker_buttons_container = newChat.frame.getElementsByClassName('new-chat-picker-buttons')[0];
+        newChat.chat_input_buttons_container = newChat.frame.getElementsByClassName('new-chat-input-buttons-container')[0];
+        newChat.chat_setting_button = newChat.frame.getElementsByClassName('nc-CS-button')[0];
+        newChat.viewer_check_button = newChat.frame.getElementsByClassName('nc-VC-button')[0];
+        newChat.send_button = newChat.frame.getElementsByClassName('new-chat-send-button')[0];
+        newChat.picker_container = newChat.frame.getElementsByClassName('nc-picker-container')[0];
+
+        newChat.attribute = {};
+
+        for(var i =0  ; i < attributeKeys.length ; i ++)
+        {
+            newChat.attribute[attributeKeys[i]] = newChat[attributeKeys[i]];
+        }
+    }
+
+    var onLoadFunctions = [];
+
+    function baseOnLoad(){
+        newChat.chat_input.addEventListener('keypress', sendChatEventListener);
+    }
+
+    //event listenrs 
+
+    function clearChat()
+    {
+        newChat.chat_input.innerHTML = '';
+    }
+
+    function turnOffPicker(){
+        var pre_pickers = newChat.picker_container.children;
+
+        for(pre_picker of pre_pickers){
+            newChat.picker_container.removeChild(pre_picker);
+        }
+
+    }
+
+    var sendChatEventListener = function(event){
+        if(event.key == 'Enter'){
+            if(event.altKey == false  && event.shiftKey == false && event.ctrlKey ==false){
+                event.preventDefault();
+                chatMethod.sendChat(newChat.chat_input.innerText);
+                turnOffPicker();
+                clearChat();
+
+                for(var i = 0 ; i < afterSendMethod.length ; i++)
+                {
+                    afterSendMethod[i]();
+                }
+            }
+
+        }
+    };
+
+    var clickSendChatEventListener = function(event){
+        chatMethod.sendChat(newChat.chat_input.innerText);
+        clearChat();
+        turnOffPicker();
+
+        for(var i = 0 ; i < afterSendMethod.length ; i++)
+        {
+            afterSendMethod[i]();
+        }
+    };
+    
+    var clickChatSettingButtonListener = function(event)
+    {
+        chatMethod.pauseReadyChat();
+        turnOffPicker();
+
+        if(chatTarget.chat_setting_balloon == null)
+        {
+            chatTarget.chat_setting_button.click();
+            var searchInterval = setInterval(function(){
+                chatTarget.chat_setting_balloon = chatTarget.searchingTWDiv('tw-balloon', 'chat-settings-balloon');
+                if(chatTarget.chat_setting_balloon != null)
+                {
+                    clearInterval(searchInterval);
+                }
+            },100)
+        }
+        else{
+            var csb_classList = chatTarget.chat_setting_balloon.classList;
+
+            for(var i = 0 ; i < csb_classList.length ; i ++)
+            {
+                if(csb_classList[i] == 'tw-hide' )
+                {
+                    chatTarget.chat_setting_button.click();
+                }
+            }
+        }
+
+        var stopCheck_SettingBallooon = function()
+        {
+            if(chatTarget.chat_setting_balloon != null)
+            {
+                var csb_classList = chatTarget.chat_setting_balloon.classList;
+                for(var i = 0 ; i < csb_classList.length ; i ++){
+                    if(csb_classList[i] == 'tw-block'){
+                        return false;
+                    }
+                    else if(csb_classList[i] == 'tw-hide'){
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+            else
+                return false;
+        };
+
+        setTimeout(function(){
+            chatConversionTrackingStart(stopCheck_SettingBallooon);
+        },150);
+        
+    }
+
+    var clickChatViewerButtonListener = function(event)
+    {
+        chatTarget.chat_view_list_button.click();
+    }
+
+    
+    // public methods of newChat object
+
+    /*
+        설정, 비트 표시등을 위한 채팅 전환 트래킹.
+
+        반드시 필요할 때만 start할것. (stop은 stopCheck 함수의 조건에 의해 이뤄짐.)
+        stopCheck function 은 되도록 빨리 처리할수 있도록 할 것.
+    */
+   
+    function chatConversionTrackingStart(stopCheck)
+    {
+        //normal mode check - 설정, 비트
+        newChat.frame.style = 'display:none !important;';
+        chatTarget.frame.style = 'display:block;';
+
+        var stopCheckInterval = setInterval(function(){
+            if(typeof(stopCheck) != 'function' || stopCheck() == true)
+            {
+                chatTarget.frame.style = 'display:none !important;';
+                newChat.frame.style = 'display:block;';
+                
+                if(typeof(chatMethod.isPaused) != 'boolean' ||
+                    (typeof(chatMethod.isPaused) == 'boolean' 
+                    && chatMethod.isPaused == true)) {
+                    chatMethod.restartReadyChat();
+                }
+
+                clearInterval(stopCheckInterval);
+            }
+        }, 100);
+    }
+
+    var afterSendMethod= [];
+
+    newChat.addOnLoad = function(handler){
+        onLoadFunctions.push(handler);
+    };
+
+    newChat.resetOnLoad = function(){
+        onLoadFunctions = [];
+    };
+
+    newChat.getAttributes = function(){
+        var attributes = {}
+
+        for(var i = 0 ; i < attributeKeys.length ;i ++){
+            attributes[attributeKeys[i]] = this[attributeKeys[i]];
+        }
+
+        return attributes;
+    }
+
+    //new chat integrity check
+    newChat.intergrityCheck = function(){
+        for(var i = 0 ; i < attributeKeys.length; i ++)
+        {
+            if(this[attributeKeys[i]] == null) return false;
+        }
+
+        return true;
+    }
+
+    //start of createNewChat
+
+    newChat.create = function(){
+        cloneChatFrame();
+
+        baseOnLoad(this);
+
+        this.viewer_check_button.addEventListener('click',clickChatViewerButtonListener);
+        this.chat_setting_button.addEventListener('click', clickChatSettingButtonListener);
+        this.send_button.addEventListener('click',clickSendChatEventListener);
+
+        newChat.chat_input.addEventListener("paste", function(e){
+            // cancel paste
+            e.preventDefault();
+            // get text representation of clipboard
+            var text = e.clipboardData.getData("text/plain");
+            // insert text manually
+            document.execCommand("insertHTML", false, text);
+        });
+
+        newChat.chat_input.addEventListener('drop',function(e){
+            // cancel paste
+            e.preventDefault();
+            // get text representation of clipboard
+            var text = e.dataTransfer.getData("text/html");
+            var tmpdiv = document.createElement('img');
+            tmpdiv.innerHTML = text;
+            if(tmpdiv.hasChildNodes)
+            {
+                var tmpimg = tmpdiv.firstChild;
+                if(tmpimg.nodeName == 'IMG' && tmpimg.alt != null){
+                    text = tmpimg.alt;
+                    
+                    // insert text manually
+                    document.execCommand("insertHTML", false, text);
+                }
+            }
+            else{
+                var text = e.dataTransfer.getData("text/plain");
+                document.execCommand("insertHTML", false, text)
+            }
+        });
+        
+        twitchTheme.changeThemeUI(this);
+    }
+
+    newChat.onLoadInit = function(){
+        for(var i = 0 ; i < onLoadFunctions.length ; i ++)
+        {
+            onLoadFunctions[i](this.attribute);
+        }
+    }
+
+    //delete of appendNewChat
+
+    newChat.delete = function() {
+        var deletedFrames = document.getElementsByClassName('new-chat');
+
+        for(var i = 0 ; i < deletedFrames.length ; i ++)
+        {
+            deletedFrames[i].parentElement.removeChild(deletedFrames[i]);
+        }
+    }
+
+    newChat.clear = function(){
+        attributeKeys.forEach(function(attribute)
+            {
+                newChat[attribute] = null;
+                newChat['attribute'][attribute] = null;
+            });
+    }
+
+    newChat.setChatMethod = function(method){
+        chatMethod = method;
+    }
+
+    newChat.appendPickerButton = function(pickerButton){
+        newChat.picker_buttons_container.appendChild(pickerButton);
+    }
+
+    newChat.addAfterSendMethod = function(callback){
+        afterSendMethod.push(callback);
+    }
+
+    newChat.resetAfterSendMethod = function(){
+        afterSendMethod = [];
+    }
+
+    newChat.turnOffPicker = turnOffPicker;
+
+    newChat.findFrame = findFrame;
+
+    return newChat;
+});
+
+define("new_chat", function(){});
+
 define('chatTracker',[
     "config",
+    'chatUsingTmi',
     'chatTarget',
+    'newChat',
     'twitchTheme'
-], function(config,chatTarget,twitchTheme){
-
-    //--------------------------------------------------
-    
-    var onLoadFunctions = [];
-    var afterSendMethod = [];
+], function(config,chatUsingTmi,chatTarget,newChat,twitchTheme){
 
     //--------------------------------------------------
 
     var pickerManager = [];
+
+    var chatMethod = chatUsingTmi;
     
     var INIT_STOP = 0 , INIT_PENDING = 1, INIT_READY = 2, INIT_DONE = 3;
     var INIT_STATUS = INIT_STOP;
@@ -1174,148 +1643,59 @@ define('chatTracker',[
     var loadContentInterval = null;
 
     function startMaster(streamer){
-       
-        twitchTheme.colorCheckStart(chatTarget);   
+
+        chatMethod.cleanUpReadyChat();                        
+
+        newChat.create();
+
+        chatTarget.parent_frame = chatTarget.frame.parentElement;
+        chatTarget.parent_frame.appendChild(newChat.frame);
+        
+        twitchTheme.colorCheckStart(newChat);
+        
+        chatMethod.readyChat(streamer);        
                                 
         START_STATUS = START_READY;
     }
 
     function slaveCheck(){
-
-        START_STATUS = START_READY;
-
+        setTimeout(function(){
+            if(newChat.findFrame()){
+                START_STATUS = START_READY;
+            }
+            else{
+                slaveCheck();
+            }
+        },300);
     }
 
 
     function terminate(isMaster){        
         if(isMaster){
             try{
-
+                newChat.turnOffPicker();
             }
             catch(e){};
 
+            chatMethod.cleanUpReadyChat();
             twitchTheme.colorCheckStop();
             
             chatTarget.clear();
-
-            for(var picker of pickerManager){
-                picker.turnOff();
-            }
-    
+            newChat.delete();
+            newChat.clear();
         }
         else{
+            newChat.clear();
         }
     }
 
-    
+    function init(){
+        newChat.onLoadInit();
 
-    function init(isMaster){
-
-        function onLoadInit(){
-            for(var i = 0 ; i < onLoadFunctions.length ; i ++)
-            {
-                onLoadFunctions[i](chatTarget);
-            }
+        for(var i = 0 ; i< pickerManager.length ;i  ++)
+        {
+            newChat.appendPickerButton(pickerManager[i].getPickerButton());
         }
-
-        function appendCustomPickers(){
-            if(chatTarget.emote_picker != null){
-                for(var i = pickerManager.length - 1 ; i>=0; i --)
-                {
-                    chatTarget.picker_container.insertBefore(pickerManager[i].getPickerButton(),chatTarget.emote_picker);  
-                }
-            }
-            else{
-                for(var i =  0 ; i < pickerManager.length  ; i ++)
-                {
-                    chatTarget.picker_container.appendChild(pickerManager[i].getPickerButton());  
-                }
-            }    
-        }
-
-        function startBitButtonChecker(){
-            chatTarget.chat_input.style = "padding-right : " + (pickerManager.length * 30) + 'px';
-
-            var bitButtonChecker = new MutationObserver(
-                function(mutationList,observer){
-
-                    var terminate = false;
-
-                    for(var mutation of mutationList){
-                        if(mutation.type == 'childList' && mutation.target == chatTarget.picker_container){
-                            for(var addedNode of mutation.addedNodes){
-
-                                if(addedNode.getAttribute('data-a-target') == 'bits-button'){
-
-                                    var firstChild = chatTarget.picker_container.firstChild;
-                                    chatTarget.picker_container.insertBefore(addedNode,firstChild);
-        
-                                    chatTarget.chat_input.style = "padding-right : " + (pickerManager.length * 30 + 30) + 'px';
-                                    bitButtonChecker.disconnect();
-    
-                                    terminate = true;
-                                    break;
-                                }
-
-                            }
-                        }
-
-                        if(terminate == true){
-                            break;
-                        } 
-                    }
-                }
-            )
-
-            bitButtonChecker.observe(chatTarget.picker_container, { childList: true });
-        }
-
-        //main routine of chat_tracker.init()
-
-        onLoadInit();
-
-        var isHide = false;
-
-        for(var picker of pickerManager){
-            if(picker.type == 'emote_picker'){
-                isHide = true;
-                break;
-            }
-        }
-
-        if(isHide) chatTarget.hideEmotePicker();
-
-        appendCustomPickers();
-
-        if(isMaster){
-            startBitButtonChecker();
-        }
-
-
-        chatTarget.chat_input.addEventListener('keydown',function(event){
-            if (event.keyCode === 13) {
-                setTimeout(function(){
-                    if(chatTarget.chat_input.value == '')
-                    {
-                        for(var method of afterSendMethod){
-                            method();
-                        }
-                    }
-                },100);
-            }
-        });
-
-        chatTarget.send_button.addEventListener('click',function(){
-            setTimeout(function(){
-                if(chatTarget.chat_input.value == '')
-                {
-                    for(var method of afterSendMethod){
-                        method();
-                    }
-                }
-            },100);   
-        });
-
     }
 
     function chatTrackingStart(streamerInfo, isMaster)
@@ -1356,7 +1736,7 @@ define('chatTracker',[
 
             if(START_STATUS == START_READY && INIT_STATUS == INIT_READY){
                 INIT_STATUS = INIT_DONE;
-                init(isMaster);
+                init();
             }
 
         }, 300);
@@ -1369,45 +1749,41 @@ define('chatTracker',[
 
         loadContentInterval = null;
 
+        
         terminate(isMaster);
 
-        chatTarget.clear();
+        if(isMaster === true){
+            try{
+                chatTarget.frame.style = 'display:block!important;';
+            }catch(e){
+                try{
+                    chatTarget.parent_frame.getElementsByClassName('chat-input')[0].style = 'display:block!important;';
+                }
+                catch(e){
 
-        for(var picker of pickerManager){
-            picker.turnOff();
+                }
+            }
         }
+
+        chatTarget.clear();
 
 
         INIT_STATUS = INIT_STOP;
         START_STATUS = START_STOP;
     }
 
-    return {     
-        chatTarget : chatTarget,    
-        addOnLoad : function(handler){
-            onLoadFunctions.push(handler);
-        },
-        addAfterSendMethod : function(callback){
-            afterSendMethod.push(callback);
-        },    
+    return {         
+        addOnLoad : newChat.addOnLoad,
+        addAfterSendMethod : newChat.addAfterSendMethod,
         start : chatTrackingStart,
         stop : chatTrackingStop,
         init : function(){
             INIT_STATUS = INIT_READY;
         },
         reset : function() {
-
-            function resetOnLoad(){
-                onLoadFunctions = [];
-            };
-
-            function resetAfterSendMethod(){
-                afterSendMethod = [];
-            }
-
             pickerManager = [];
-            resetOnLoad();
-            resetAfterSendMethod();
+            newChat.resetOnLoad();
+            newChat.resetAfterSendMethod();
         },
 
         registerPicker : function(picker){
@@ -1421,25 +1797,7 @@ define('chatTracker',[
                     pickerManager.splice(ax, 1);
                 }
             }
-        },
-
-        get chatCursor(){
-            delete chatCursor;
-            return chatTarget.chat_input.selectionEnd;
-        },
-        set chatCursor(pos){
-            chatTarget.chat_input.selectionEnd = pos;
-        },
-        get chatText(){
-            delete chatText;
-            return chatTarget.chat_input.value;
-        },
-        set chatText(txt){
-            var f = Object.getOwnPropertyDescriptor(chatTarget.chat_input.__proto__,'value').set;
-            f.call(chatTarget.chat_input,txt);
-            var ev2 = new Event('input', { bubbles: true});
-            chatTarget.chat_input.dispatchEvent(ev2);
-        },
+        }
     }
 });
 
@@ -1596,28 +1954,22 @@ define('observer',[],function(){
             var child = target.children;
             var len = child.length;
 
-            var isTerminate = false;
-
-
             for(var i = len - 1 ; i >= 0 ; i --)
             {
-                for(var c in child[i].classList)
+                if(child[i].getAttribute(TCF_CHANGED_ATTR) == 'true')
                 {
-                    if(child[i].classList[c] == "chat-line__message")
-                    {
-                        if(child[i].getAttribute(TCF_CHANGED_ATTR) == 'true')
-                        {
-                            isTerminate = true;
-                        }
-                        else{
-                            child[i].setAttribute(TCF_CHANGED_ATTR,'true');
-                            edit_chating(child[i]);   
-                        }                
-                        break;
-                    }
-                }  
+                    break;
+                }
+                else{
+                    child[i].setAttribute(TCF_CHANGED_ATTR,'true');
 
-                if(isTerminate) break;
+                    for(var c in child[i].classList)
+                    {
+                        if(child[i].classList[c] == "chat-line__message")
+                            edit_chating(child[i]);              
+                            break;
+                    }
+                }            
             }  
 
         }
@@ -1662,13 +2014,6 @@ define('observer',[],function(){
                 {
                     emoteSpan.push(chatLI.children[i]);
                 }
-                else if(
-                    chatLI.children[i].firstChild != null &&
-                    chatLI.children[i].firstChild.nodeName == 'SPAN' &&
-                    chatLI.children[i].firstChild.getAttribute('data-a-target') == emoteName)
-                {
-                    emoteSpan.push(chatLI.children[i].firstChild);
-                }
             }
             
         }
@@ -1676,19 +2021,12 @@ define('observer',[],function(){
         {
             var tmpSpan = chatLI.getElementsByClassName(chatMessage)[0].children;
             for(i = 0 ;i < tmpSpan.length; i ++){
-                if(tmpSpan[i].getAttribute('data-a-target') == 'emote-name')
+                if(tmpSpan[i].getAttribute('data-a-target') != 'emote-name')
                 {
-                    emoteSpan.push(chatLI.children[i]);
+                    chatMessageSpan.push(tmpSpan[i]);
                 }
                 else{
-                    if(tmpSpan[i].firstChild.getAttribute('data-a-target') == 'emote-name')
-                    {
-                        emoteSpan.push(tmpSpan[i].firstChild);
-                    }
-                    else{
-                        chatMessageSpan.push(tmpSpan[i]);
-                    }
-                    
+                    emoteSpan.push(chatLI.children[i]);
                 }
             }
         }
@@ -1733,9 +2071,9 @@ define('observer',[],function(){
     }
 });
 define('tcf',
-    ['chatTracker','tcfConfig','picker','observer'],
+    ['newChat','chatTracker','tcfConfig','picker','observer','chatUsingTmi'],
     function(
-        chatTracker, tcfConfig,picker,observer
+        newChat,chatTracker, tcfConfig,picker,observer,chatMethod
     ){
         var startCheckers = [];
         var stopHandlers = [];
@@ -1951,23 +2289,8 @@ define('tcf',
                     성공했을 때 resolve(tcfConfig)를 호출하는 promise
                 )
             */
-            addTextToChatInput : function(txt){
-                chatTracker.chatText = chatTracker.chatText + txt;
-            },
-            
-            get chatCursor(){
-                delete chatCursor;
-                return chatTracker.chatCursor;
-            },
-            set chatCursor(pos){
-                chatTracker.chatCursor = pos;
-            },
-            get chatText(){
-                delete chatText;
-                return chatTracker.chatText;
-            },
-            set chatText(txt){
-                chatTracker.chatText = txt;
+            addTextToChatInput : function(html){
+                newChat.chat_input.innerHTML += html;
             },
             addStartChecker : function(startChecker){
                 startCheckers.push(startChecker);
@@ -2019,7 +2342,7 @@ define('tcf',
                 })
 
                 var connectPromise = new Promise(function(resolve){
-                    Promise.all([statusPromise,masterCheckPromise,getIdPromise]).then(function(values){
+                    Promise.all([chatMethod.connectPromise,statusPromise,masterCheckPromise,getIdPromise]).then(function(values){
                         resolve({result : true , data : values});
                     });
                 } );
@@ -2064,8 +2387,7 @@ define('tcf',
                 chrome.runtime.sendMessage({type:'refresh'},function(result){
                     
                 });
-            },
-            chatTarget : chatTracker.chatTarget
+            }
         }
     }
 );
@@ -2075,7 +2397,10 @@ require.config = {
         config : 'config',
         twitchTheme : 'twitch_theme',
         picker : 'picker',
+        //pickerManager : 'picker_manager',
+        chatUsingTmi : 'chat_using_tmi',
         chatTarget : 'chat_target',
+        newChat : 'new_chat',
         chatTracker : 'chat_tracker',       
 
         tcfConfig : 'tcf_config',
