@@ -1,7 +1,7 @@
 ﻿{
     "manifest_version" : 2,
     "name": "트위티콘 차원문",
-    "version" : "1.1.0.3",
+    "version" : "1.1.0.4",
 
     "description" : "한글 별칭으로 Twitch 이모티콘 사용",
 
