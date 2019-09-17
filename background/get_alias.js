@@ -72,8 +72,7 @@ var emoteAlias = (function(){
     var lastEmoteAvailableList = null;
 //-------------------------------------------------------------------------------
 
-    var emote_server_url = 'http://178.128.103.40'
-
+    var emote_server_url = 'http://twiticon.com/extension';
     var EmoteInfoList = null;
     var EmoteAliasList = null;
     var EmoteRegexList = null;

@@ -30,7 +30,7 @@ tcfBackground.registerCookieListener(function(){
     })
 });
 
-var emote_server_url = 'http://178.128.103.40';
+var emote_server_url = 'http://twiticon.com/extension';
 
 chrome.runtime.onMessage.addListener(
     function(request, sender, callback){
