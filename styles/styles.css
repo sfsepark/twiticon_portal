@@ -28,6 +28,14 @@ div.new-chat-input {
     z-index: 2000;
 }
 
+div#nc-emote__all{
+    display: inline-block;
+}
+
+div#nc-emote__channel{
+    display: inline-block;
+}
+
 
 .emote-list-div{
     border : #7d6bbe solid 1px; 
