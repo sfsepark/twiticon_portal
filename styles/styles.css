@@ -424,3 +424,65 @@ div.new-chat-flex-container{
 .nc-dark .nc-balloon2:after{
     border-top: 10px solid rgb(14,12,19);
 }
+
+
+/* 트위치 테마관련 (신) */
+
+section[data-a-target=chat-theme-light] .nc-pd-1{
+    background-color: #ffffff !important;
+}
+
+section[data-a-target=chat-theme-dark] .nc-pd-1{
+    background-color: #201C2B !important;
+}
+
+
+section[data-a-target=chat-theme-light] .emote-list-div{
+    background : #ffffff !important;
+}
+
+section[data-a-target=chat-theme-dark] .emote-list-div{
+    background: rgb(14,12,19) !important;
+}
+
+
+section[data-a-target=chat-theme-light] .new-chat-input {
+    outline : #DAD8DE solid 1px !important;
+    background: #ffffff !important;
+}
+
+section[data-a-target=chat-theme-dark] .new-chat-input {
+    outline : rgb(57,46,92) solid 1px !important;
+    background: rgb(14,12,19) !important;
+}
+
+
+
+section[data-a-target=chat-theme-light] .new-chat-input[contenteditable=true]{
+    color : #111 !important;
+    font-size: 12px !important;
+}
+
+section[data-a-target=chat-theme-dark] .new-chat-input[contenteditable=true]{
+    color : #faf9fa !important;
+    font-size: 12px !important;
+}
+
+
+section[data-a-target=chat-theme-light] .recommend-emote-span{
+    -webkit-transition:background-color 1s !important;
+    transition:background-color 1s  !important;
+}
+
+section[data-a-target=chat-theme-light] .recommend-emote-span:hover{
+    background-color: #eeeeee  !important;
+    border-top:3px  !important;
+}
+
+section[data-a-target=chat-theme-light] .nc-balloon2::after{
+    border-top: 10px solid #ffffff  !important;
+}
+
+section[data-a-target=chat-theme-dark] .nc-balloon2:after{
+    border-top: 10px solid rgb(14,12,19)  !important;
+}
