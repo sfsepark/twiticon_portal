@@ -1,7 +1,7 @@
 var channelProduct = (function(){
 
     var channelCache = new lru(20);
-    var client_id = 'irgj4khs9whj1xx3vw4sdv7fdjp10f';
+    var client_id = 'kimne78kx3ncx6brgo4mv6wki5h1ko' //'irgj4khs9whj1xx3vw4sdv7fdjp10f';
 
     function getChannelProduct(channel_name, callback){
         var url = 'https://api.twitch.tv/api/channels/' + channel_name + '/product';
