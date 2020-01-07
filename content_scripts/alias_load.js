@@ -26,20 +26,41 @@ chrome.runtime.onMessage.addListener(
     }
 );
 */
-var aliasPromise = new Promise(function(resolve, reject){
-    chrome.runtime.sendMessage({type:'emote_alias'}, function(response)
-    {
-        if(response != null && response.error === undefined)
+
+
+var aliasReset = function (){
+    return new Promise(function(resolve, reject){
+        chrome.runtime.sendMessage({type:'emote_alias'}, function(response)
         {
-            resolve(true);
-            aliasLoad(response);
-        }
-        else{
-            resolve(false);
-            aliasClear();
-        }
-    });    
+            if(response != null && response.error === undefined)
+            {
+                resolve(true);
+                aliasLoad(response);
+            }
+            else{
+                resolve(false);
+                aliasClear();
+            }
+        });    
+    })
+}
+
+
+var aliasPromise = aliasReset();
+
+aliasPromise.then((result) => {
+    if(result){
+        startResetInterval();
+    }
 })
+
+var startResetInterval = function(){
+    setInterval(() => {
+        chrome.runtime.sendMessage({type:'refresh',data : 'soft'},function(result){});
+        aliasReset();
+    }, 5000)
+}
+
 
 
 
